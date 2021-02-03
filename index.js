@@ -2,22 +2,22 @@ let cur = 0;
 let numOfItemsPerPage = 25;
 let currentPage;
 let totalPages;
-let offset;
+let offset = 0;
 const imageDiv = document.querySelector("#giphyViewer");
-const currentPageLabel = document.querySelector("#pageNumber");
+const currentPageInput = document.querySelector("#pageNumber");
 const numOfItemsPerPageInput = document.querySelector("#perPage");
 const totalPagesLabel = document.querySelector("#totalPages");
 let searchUrl;
 let persistUrl;
-
-let searchParams
+let editPage = false;
+let searchParams;
 
 numOfItemsPerPageInput.value = numOfItemsPerPage;
 
 let trendingUrl;
 
 trendingGif(numOfItemsPerPage);
-function trendingGif(num){
+function trendingGif(num) {
   trendingUrl =
     "https://api.giphy.com/v1/gifs/trending?api_key=t6PNxhrMllh9xZIj5CfGb61sDca43kkd&limit=" +
     num +
@@ -35,7 +35,6 @@ function searching(e) {
   searchParams = searchInput.value;
   //console.log(searchParams);
   searchGif();
-  
 }
 
 function searchGif() {
@@ -44,7 +43,9 @@ function searchGif() {
     searchParams +
     "&limit=" +
     numOfItemsPerPage +
-    "&offset=0&rating=r&lang=en";
+    "&offset=" +
+    offset +
+    "&rating=r&lang=en";
   imageDiv.innerHTML = "";
 
   setList(searchUrl);
@@ -57,17 +58,41 @@ function pages(e) {
   e.preventDefault();
   //console.log("I've penetrated")
   numOfItemsPerPage = numOfItemsPerPageInput.value;
+  
+  
 
   if (persistUrl == trendingUrl) {
     imageDiv.innerHTML = "";
 
     trendingGif(numOfItemsPerPage);
-  }
-  else if (persistUrl == searchUrl) { 
+  } else if (persistUrl == searchUrl) {
     imageDiv.innerHTML = "";
 
     searchGif();
   }
+}
+
+currentPageInput.addEventListener("input", movePages);
+function movePages(e) { 
+  e.preventDefault();
+  currentPage = currentPageInput.value;
+
+  if (persistUrl == searchUrl) {
+    
+    offset = currentPage * numOfItemsPerPage
+
+    editPage = true;
+    searchGif();
+  } 
+}
+
+function setPages(){ 
+  if (offset == 0) {
+    currentPage = 1;
+  } else {
+    currentPage = Math.ceil(offset / numOfItemsPerPage);
+  }
+  currentPageInput.value = currentPage;
 }
 
 function setList(url) {
@@ -102,13 +127,20 @@ function setList(url) {
         //  }
         totalPages = Math.ceil(data.pagination.total_count / numOfItemsPerPage);
         totalPagesLabel.innerHTML = "Total Pages: " + totalPages;
-
       }
     })
     .catch(function (err) {
       // There was an error
       console.warn("Something went wrong.", err);
     });
+  if (editPage == false) {
+    setPages();
+
+  } else if(editPage == true){ 
+    movePages();
+    editPage = false;
+
+  }
 }
 // images[data][0];
 // var img = document.createElement('img');
