@@ -1,57 +1,108 @@
-let images;
-const imageDiv = document.querySelector('#giphyViewer');
+let cur = 0;
+let numOfItemsPerPage = 25;
+let currentPage;
+let totalPages;
+let offset;
+const imageDiv = document.querySelector("#giphyViewer");
+const currentPageLabel = document.querySelector("#pageNumber");
+const numOfItemsPerPageInput = document.querySelector("#perPage");
+const totalPagesLabel = document.querySelector("#totalPages");
+let searchUrl;
+let persistUrl;
 
-//window.localStorage(url,trendingUrl)
-const trendingUrl = "https://api.giphy.com/v1/gifs/trending?api_key=t6PNxhrMllh9xZIj5CfGb61sDca43kkd&limit=25&rating=r";
-setList(trendingUrl);
+let searchParams
 
-const search = document.querySelector('#search');
-const searchInput = document.querySelector('#input');
+numOfItemsPerPageInput.value = numOfItemsPerPage;
 
-search.addEventListener('submit',searchGif);
+let trendingUrl;
 
-function searchGif(e) {
+trendingGif(numOfItemsPerPage);
+function trendingGif(num){
+  trendingUrl =
+    "https://api.giphy.com/v1/gifs/trending?api_key=t6PNxhrMllh9xZIj5CfGb61sDca43kkd&limit=" +
+    num +
+    "&rating=r";
+  setList(trendingUrl);
+}
+
+const search = document.querySelector("#search");
+const searchInput = document.querySelector("#input");
+
+search.addEventListener("submit", searching);
+
+function searching(e) {
   e.preventDefault();
-  console.log("I am in");
-  let searchParams = searchInput.value;
-  console.log(searchParams);
-  const searchUrl = "https://api.giphy.com/v1/gifs/search?api_key=t6PNxhrMllh9xZIj5CfGb61sDca43kkd&q="
-    + searchParams +
-    "&limit=25&offset=0&rating=r&lang=en";
+  searchParams = searchInput.value;
+  //console.log(searchParams);
+  searchGif();
+  
+}
+
+function searchGif() {
+  searchUrl =
+    "https://api.giphy.com/v1/gifs/search?api_key=t6PNxhrMllh9xZIj5CfGb61sDca43kkd&q=" +
+    searchParams +
+    "&limit=" +
+    numOfItemsPerPage +
+    "&offset=0&rating=r&lang=en";
   imageDiv.innerHTML = "";
+
   setList(searchUrl);
 }
 
+const pagination = document.querySelector("#pk");
+numOfItemsPerPageInput.addEventListener("input", pages);
 
-function setList(url){
+function pages(e) {
+  e.preventDefault();
+  //console.log("I've penetrated")
+  numOfItemsPerPage = numOfItemsPerPageInput.value;
+
+  if (persistUrl == trendingUrl) {
+    imageDiv.innerHTML = "";
+
+    trendingGif(numOfItemsPerPage);
+  }
+  else if (persistUrl == searchUrl) { 
+    imageDiv.innerHTML = "";
+
+    searchGif();
+  }
+}
+
+function setList(url) {
+  persistUrl = url;
   fetch(url)
     .then(function (response) {
       // The API call was successful!
       //console.log(response.json());
       // images =
-    
+
       return response.json();
     })
     // .then(function (data) {
     //   // This is the JSON from our response
     //   images = data;
-  
+
     //   console.log(data);
     // })
 
     .then(function (data) {
-      console.log(data);
-      console.log(data.data.length);
-      console.log(data.data[2].embed_url);
+      //console.log(data);
+      //console.log(Math.ceil(data.pagination.total_count / numOfItemsPerPage));
+      //console.log(data.data.length);
+
       for (let i = 0; i < data.data.length; i++) {
-                   
         /* Fetch only image that you want by using id. Example : https://unsplash.com/photos/6VhPY27jdps, id = '6VhPY27jdps'   */
         //if (data.results[i].id == "6VhPY27jdps") {
-        let imageElement = document.createElement('img');
+        let imageElement = document.createElement("img");
         imageElement.src = data.data[i].images.fixed_width.url;
         //imageElement.style = data.data[2].images.downsized_small;
         imageDiv.append(imageElement);
         //  }
+        totalPages = Math.ceil(data.pagination.total_count / numOfItemsPerPage);
+        totalPagesLabel.innerHTML = "Total Pages: " + totalPages;
+
       }
     })
     .catch(function (err) {
@@ -60,6 +111,6 @@ function setList(url){
     });
 }
 // images[data][0];
-// var img = document.createElement('img'); 
-// img.src = images[data][0][url]; 
-// document.getElementById('body').appendChild(img); 
+// var img = document.createElement('img');
+// img.src = images[data][0][url];
+// document.getElementById('body').appendChild(img);
